@@ -4,12 +4,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.concurrent.TimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -29,11 +29,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         var id = requestIds.getAndIncrement();
         try {
             if (noDelay) {
-                bucket.block(id);
+                bucket.put(id);
                 filterChain.doFilter(request, response);
                 return;
             }
-            bucket.blockAndWait(id);
+            bucket.putAndWait(id);
             filterChain.doFilter(request, response);
         } catch (BucketFullException | TimeoutException e) {
             responseTooManyRequest(response);

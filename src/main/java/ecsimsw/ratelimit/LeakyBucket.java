@@ -1,6 +1,5 @@
 package ecsimsw.ratelimit;
 
-import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +27,7 @@ public class LeakyBucket<T> {
         }, 0, flowRate, TimeUnit.MILLISECONDS);
     }
 
-    public void block(T id) {
+    public void put(T id) {
         try {
             waitings.add(id);
             LOGGER.info("block, waitings : " + waitings.size());
@@ -37,8 +36,8 @@ public class LeakyBucket<T> {
         }
     }
 
-    public void blockAndWait(T id) throws TimeoutException {
-        block(id);
+    public void putAndWait(T id) throws TimeoutException {
+        put(id);
         var startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < (long) flowRate * capacity) {
             if (!waitings.contains(id)) {
