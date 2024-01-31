@@ -4,7 +4,6 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Queue;
 import java.util.concurrent.*;
 
 public class LeakyBucket<T> {
@@ -24,22 +23,22 @@ public class LeakyBucket<T> {
         scheduleService.scheduleAtFixedRate(() -> {
             if (!waitings.isEmpty()) {
                 waitings.poll();
-                LOGGER.info("poll, waitings : " + waitings.size());
+                LOGGER.info("release, waitings : " + waitings.size());
             }
         }, 0, flowRate, TimeUnit.MILLISECONDS);
     }
 
-    public void offer(T id) {
+    public void block(T id) {
         try {
             waitings.add(id);
-            LOGGER.info("offer, waitings : " + waitings.size());
+            LOGGER.info("block, waitings : " + waitings.size());
         } catch (IllegalStateException e) {
             throw new BucketFullException("bucket full");
         }
     }
 
-    public void offerAndWait(T id) throws TimeoutException {
-        offer(id);
+    public void blockAndWait(T id) throws TimeoutException {
+        block(id);
         var startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < (long) flowRate * capacity) {
             if (!waitings.contains(id)) {

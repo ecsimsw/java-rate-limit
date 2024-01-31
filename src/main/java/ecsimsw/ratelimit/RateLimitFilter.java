@@ -29,11 +29,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         var id = requestIds.getAndIncrement();
         try {
             if (noDelay) {
-                bucket.offer(id);
+                bucket.block(id);
                 filterChain.doFilter(request, response);
                 return;
             }
-            bucket.offerAndWait(id);
+            bucket.blockAndWait(id);
             filterChain.doFilter(request, response);
         } catch (BucketFullException | TimeoutException e) {
             responseTooManyRequest(response);
