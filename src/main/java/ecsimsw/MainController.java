@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class MainController {
 
-    @RateLimit(rate = 5, burst = 4, noDelay = false)
+    @RateLimit(rate = 100, burst = 5, noDelay = true)
     @RequestMapping("/foo")
     ResponseEntity<String> handleFoo() {
         return ResponseEntity.ok("hi");
