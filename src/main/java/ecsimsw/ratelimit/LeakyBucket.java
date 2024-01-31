@@ -1,5 +1,6 @@
 package ecsimsw.ratelimit;
 
+import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,37 +13,32 @@ public class LeakyBucket<T> {
 
     private final int flowRate;
     private final int capacity;
-    private final Queue<T> waitings;
+    private final BlockingQueue<T> waitings;
 
     public LeakyBucket(int flowRate, int capacity) {
         this.flowRate = flowRate;
         this.capacity = capacity;
-        this.waitings = new ConcurrentLinkedQueue<>();
+        this.waitings = new ArrayBlockingQueue<>(capacity);
 
         var scheduleService = Executors.newScheduledThreadPool(1);
-        scheduleService.scheduleAtFixedRate(
-            () -> {
-                if (!waitings.isEmpty()) {
-                    waitings.poll();
-                    LOGGER.info("poll!!!, waitings : " + waitings.size());
-                }
-            }, 0, flowRate, TimeUnit.MILLISECONDS
-        );
+        scheduleService.scheduleAtFixedRate(() -> {
+            if (!waitings.isEmpty()) {
+                waitings.poll();
+                LOGGER.info("poll, waitings : " + waitings.size());
+            }
+        }, 0, flowRate, TimeUnit.MILLISECONDS);
     }
 
-    public boolean isFull() {
-        return waitings.size() >= capacity;
-    }
-
-    public synchronized void offer(T id) {
-        if(isFull()) {
-            throw new IllegalArgumentException("bucket full");
+    public void offer(T id) {
+        try {
+            waitings.add(id);
+            LOGGER.info("offer, waitings : " + waitings.size());
+        } catch (IllegalStateException e) {
+            throw new BucketFullException("bucket full");
         }
-        waitings.offer(id);
-        LOGGER.info("offer!!!, waitings : " + waitings.size());
     }
 
-    public void offerAndWait(T id) {
+    public void offerAndWait(T id) throws TimeoutException {
         offer(id);
         var startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < (long) flowRate * capacity) {
@@ -55,6 +51,6 @@ public class LeakyBucket<T> {
                 throw new RuntimeException(e);
             }
         }
-        throw new IllegalArgumentException("time out");
+        throw new TimeoutException("time out");
     }
 }

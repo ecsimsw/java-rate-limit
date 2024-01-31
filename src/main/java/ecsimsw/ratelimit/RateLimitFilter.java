@@ -1,8 +1,10 @@
 package ecsimsw.ratelimit;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.concurrent.TimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,21 +25,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        var id = requestIds.getAndIncrement();
         try {
-            var id = requestIds.getAndIncrement();
             if (noDelay) {
                 bucket.offer(id);
                 filterChain.doFilter(request, response);
                 return;
             }
-            try {
-                bucket.offerAndWait(id);
-                filterChain.doFilter(request, response);
-            } catch (Exception timeoutException) {
-                responseTooManyRequest(response);
-            }
-        } catch (Exception bucketFull) {
+            bucket.offerAndWait(id);
+            filterChain.doFilter(request, response);
+        } catch (BucketFullException | TimeoutException e) {
             responseTooManyRequest(response);
         }
     }
