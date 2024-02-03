@@ -38,7 +38,7 @@ public class FilterRegister implements BeanFactoryPostProcessor {
             registerRateLimitFilter(
                 beanFactory,
                 handler.getDeclaredAnnotation(RateLimit.class),
-                handler.getDeclaredAnnotation(RequestMapping.class).path()
+                handler.getDeclaredAnnotation(RequestMapping.class).value()
             );
         }
     }
