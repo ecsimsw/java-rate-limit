@@ -16,6 +16,7 @@ dependencies {
 
     // Spring
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-test'
 
     // Google Guava
     implementation 'com.google.guava:guava:33.0.0-jre'
@@ -27,7 +28,11 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
 
     // ShutDown
-    implementation 'com.github.ecsimsw:api-shutdown:0.0.4'
+    implementation 'com.github.ecsimsw:api-shutdown:0.0.5'
+
+    // Test
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 }
 
 test {
