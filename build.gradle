@@ -17,6 +17,7 @@ dependencies {
     // Spring
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // Google Guava
     implementation 'com.google.guava:guava:33.0.0-jre'
