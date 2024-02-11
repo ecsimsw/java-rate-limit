@@ -16,17 +16,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final AtomicLong requestIds = new AtomicLong(0);
 
+    private final int burst;
     private final LeakyBucket<Long> bucket;
     private final boolean noDelay;
 
     public RateLimitFilter(int rate, int burst, boolean noDelay) {
         this.noDelay = noDelay;
+        this.burst = burst;
         this.bucket = new LeakyBucket<>(rate, burst);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        var id = requestIds.getAndIncrement();
+        var id = requestIds.getAndIncrement() % (burst+1);
         try {
             if (noDelay) {
                 bucket.put(id);
