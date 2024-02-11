@@ -1,5 +1,6 @@
-package ecsimsw.ratelimit;
+package ecsimsw.usage;
 
+import ecsimsw.ratelimit.RateLimit;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.springframework.beans.BeansException;

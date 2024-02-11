@@ -1,5 +1,7 @@
-package ecsimsw.ratelimit;
+package ecsimsw.usage;
 
+import ecsimsw.ratelimit.RateLimitCounter;
+import ecsimsw.ratelimit.TooManyRequestException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,35 +11,21 @@ import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class RateLimitFilter extends OncePerRequestFilter {
 
-    private final AtomicLong requestIds = new AtomicLong(0);
-
-    private final int burst;
-    private final LeakyBucket<Long> bucket;
-    private final boolean noDelay;
+    private final RateLimitCounter rateLimitCounter;
 
     public RateLimitFilter(int rate, int burst, boolean noDelay) {
-        this.noDelay = noDelay;
-        this.burst = burst;
-        this.bucket = new LeakyBucket<>(rate, burst);
+        this.rateLimitCounter = new RateLimitCounter(burst, rate, noDelay);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        var id = requestIds.getAndIncrement() % (burst+1);
         try {
-            if (noDelay) {
-                bucket.put(id);
-                filterChain.doFilter(request, response);
-                return;
-            }
-            bucket.putAndWait(id);
+            rateLimitCounter.count();
             filterChain.doFilter(request, response);
-        } catch (BucketFullException | TimeoutException e) {
+        } catch (TooManyRequestException e) {
             responseTooManyRequest(response);
         }
     }
