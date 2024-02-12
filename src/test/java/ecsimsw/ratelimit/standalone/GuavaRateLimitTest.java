@@ -1,4 +1,4 @@
-package ecsimsw.ratelimit;
+package ecsimsw.ratelimit.standalone;
 
 import com.google.common.util.concurrent.RateLimiter;
 import org.junit.jupiter.api.DisplayName;

@@ -1,15 +1,15 @@
-package ecsimsw.ratelimit;
+package ecsimsw.ratelimit.distribute;
 
+import ecsimsw.ratelimit.BucketFullException;
+import ecsimsw.ratelimit.LeakyBucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
 
 import java.util.concurrent.*;
 
-public class LeakyBucketDistributed<T> {
+public class LeakyBucketDistributed<T> implements LeakyBucket<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LeakyBucketDistributed.class);
 
@@ -17,7 +17,6 @@ public class LeakyBucketDistributed<T> {
     private final int capacity;
     private final BlockingQueue<T> waitings;
     private final ListOperations<String, String> listOperations;
-
 
     public LeakyBucketDistributed(int flowRate, int capacity, RedisTemplate<String, String> redisTemplate) {
         this.flowRate = flowRate;

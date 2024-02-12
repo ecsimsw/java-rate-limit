@@ -1,5 +1,6 @@
-package ecsimsw.ratelimit;
+package ecsimsw.ratelimit.standalone;
 
+import ecsimsw.ratelimit.RateLimitCounter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

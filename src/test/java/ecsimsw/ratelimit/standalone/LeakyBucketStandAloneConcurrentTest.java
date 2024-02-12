@@ -1,5 +1,6 @@
-package ecsimsw.ratelimit;
+package ecsimsw.ratelimit.standalone;
 
+import ecsimsw.ratelimit.testUtils.ConcurrentTestUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +12,7 @@ import java.util.concurrent.Executors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("버킷 동시성 문제 처리 학습 테스트")
-class LeakyBucketConcurrentTest {
+class LeakyBucketStandAloneConcurrentTest {
 
     int numberOfThreads = 10;
 
@@ -20,7 +21,7 @@ class LeakyBucketConcurrentTest {
     public void testWithoutConcurrent() {
         int additionCount = 2000;
         var bucket = new LinkedList<>();
-        concurrentRequestScenario(() -> {
+        ConcurrentTestUtils.concurrentRequestScenario(numberOfThreads, () -> {
             for (var j = 0; j < additionCount; j++) {
                 bucket.offerLast(0);
             }
@@ -33,7 +34,7 @@ class LeakyBucketConcurrentTest {
     public void testWithConcurrentLib() {
         int additionCount = 2000;
         var bucket = new ArrayBlockingQueue<>(additionCount * numberOfThreads);
-        concurrentRequestScenario(() -> {
+        ConcurrentTestUtils.concurrentRequestScenario(numberOfThreads, () -> {
             try {
                 for (var j = 0; j < additionCount; j++) {
                     bucket.put(0);
@@ -43,20 +44,5 @@ class LeakyBucketConcurrentTest {
             }
         });
         assertThat(bucket.size()).isEqualTo(additionCount * numberOfThreads);
-    }
-
-    private void concurrentRequestScenario(Runnable concurrentRequestScene) {
-        try (
-            var service = Executors.newFixedThreadPool(numberOfThreads);
-        ) {
-            var latch = new CountDownLatch(numberOfThreads);
-            for (var i = 0; i < numberOfThreads; i++) {
-                service.execute(concurrentRequestScene);
-                latch.countDown();
-            }
-            latch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
