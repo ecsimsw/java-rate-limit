@@ -16,8 +16,6 @@ import org.springframework.data.redis.support.atomic.RedisAtomicLong;
 @Configuration
 public class RedisConfig {
 
-    private static final String LOCK_KEY = "BUCKET_LOCK";
-
     @Value("${spring.data.redis.host}")
     private String host;
 
@@ -36,10 +34,5 @@ public class RedisConfig {
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         return redisTemplate;
-    }
-
-    @Bean
-    public RedisAtomicInteger AtomicIntegerLock() {
-        return new RedisAtomicInteger(LOCK_KEY, redisConnectionFactory());
     }
 }

@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("버킷 동시성 문제 처리 학습 테스트")
-class LeakyBucketStandAloneConcurrentTest {
+class LeakyBucketConcurrentTest {
 
     int numberOfThreads = 10;
 

@@ -1,23 +1,22 @@
-package ecsimsw.usage;
+package ecsimsw.ratelimit.distribute;
 
-import ecsimsw.ratelimit.RateLimitCounter;
 import ecsimsw.ratelimit.TooManyRequestException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-
-public class RateLimitFilter extends OncePerRequestFilter {
+public class RateLimitFilterRedis extends OncePerRequestFilter {
 
     private final RateLimitCounter rateLimitCounter;
 
-    public RateLimitFilter(int rate, int burst, boolean noDelay) {
-        this.rateLimitCounter = new RateLimitCounter(burst, rate, noDelay);
+    public RateLimitFilterRedis(int rate, int burst, boolean noDelay, RedisTemplate redisTemplate) {
+        this.rateLimitCounter = new RateLimitCounter(burst, rate, noDelay, redisTemplate);
     }
 
     @Override

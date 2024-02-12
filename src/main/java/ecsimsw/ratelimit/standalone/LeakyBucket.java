@@ -1,35 +1,30 @@
-package ecsimsw.ratelimit.distribute;
+package ecsimsw.ratelimit.standalone;
 
 import ecsimsw.ratelimit.BucketFullException;
-import ecsimsw.ratelimit.LeakyBucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.concurrent.*;
 
-public class LeakyBucketDistributed<T> implements LeakyBucket<T> {
+public class LeakyBucket<T> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LeakyBucketDistributed.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LeakyBucket.class);
 
     private final int flowRate;
     private final int capacity;
     private final BlockingQueue<T> waitings;
-    private final ListOperations<String, String> listOperations;
 
-    public LeakyBucketDistributed(int flowRate, int capacity, RedisTemplate<String, String> redisTemplate) {
+    public LeakyBucket(int flowRate, int capacity) {
         this.flowRate = flowRate;
         this.capacity = capacity;
         this.waitings = new ArrayBlockingQueue<>(capacity);
-        this.listOperations = redisTemplate.opsForList();
         fixedFlow(flowRate);
     }
 
     public void put(T id) {
         try {
             waitings.add(id);
-            LOGGER.info("block, waitings : " + waitings.size());
+            LOGGER.info("stand : block, waitings : " + waitings.size());
         } catch (IllegalStateException e) {
             throw new BucketFullException("bucket full");
         }
