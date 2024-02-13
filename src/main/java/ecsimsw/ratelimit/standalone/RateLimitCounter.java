@@ -9,18 +9,16 @@ public class RateLimitCounter {
 
     private final AtomicLong requestIds = new AtomicLong(0);
 
-    private final int burst;
     private final LeakyBucket<Long> bucket;
     private final boolean noDelay;
 
     public RateLimitCounter(int burst, int rate, boolean noDelay) {
         this.noDelay = noDelay;
-        this.burst = burst;
         this.bucket = new LeakyBucket<>(rate, burst);
     }
 
     public void count() {
-        var id = requestIds.getAndIncrement() % (burst+1);
+        var id = requestIds.getAndIncrement();
         try {
             if (noDelay) {
                 bucket.put(id);

@@ -24,7 +24,7 @@ public class LeakyBucket<T> {
     public void put(T id) {
         try {
             waitings.add(id);
-            LOGGER.info("stand : block, waitings : " + waitings.size());
+            LOGGER.info("put, waitings : " + waitings.size());
         } catch (IllegalStateException e) {
             throw new BucketFullException("bucket full");
         }

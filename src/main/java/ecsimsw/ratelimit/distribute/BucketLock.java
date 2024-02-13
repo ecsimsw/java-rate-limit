@@ -1,24 +1,25 @@
 package ecsimsw.ratelimit.distribute;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.support.atomic.RedisAtomicInteger;
+import org.springframework.data.redis.core.ValueOperations;
 
 public class BucketLock {
 
     private static final String LOCK_KEY = "BUCKET_LOCK";
-    private static final int LOCK_WAIT_TIME_OUT_MS = 10000;
+    private static final int LOCK_TTL = 100;
 
-    private final RedisAtomicInteger locks;
+    private final ValueOperations locks;
 
     public BucketLock(RedisTemplate redisTemplate) {
-        this.locks = new RedisAtomicInteger(LOCK_KEY, redisTemplate);
+        this.locks = redisTemplate.opsForValue();
     }
 
     public void acquire() throws TimeoutException {
         var startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < LOCK_WAIT_TIME_OUT_MS) {
-            if (locks.compareAndSet(0, 1)) {
+        while (System.currentTimeMillis() - startTime < LOCK_TTL + 1) {
+            if (locks.setIfAbsent(LOCK_KEY, 0, LOCK_TTL, TimeUnit.MILLISECONDS)) {
                 return;
             }
             try {
@@ -31,6 +32,6 @@ public class BucketLock {
     }
 
     public void release() {
-        locks.compareAndSet(1, 0);
+        locks.getAndDelete(LOCK_KEY);
     }
 }

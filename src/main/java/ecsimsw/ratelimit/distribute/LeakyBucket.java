@@ -17,7 +17,7 @@ public class LeakyBucket<T> {
 
     private final int flowRate;
     private final int capacity;
-    private final ListOperations<String, Long> waitings;
+    private final ListOperations<String, Integer> waitings;
     private final BucketLock bucketLock;
 
     public LeakyBucket(int flowRate, int capacity, RedisTemplate redisTemplate) {
@@ -28,22 +28,22 @@ public class LeakyBucket<T> {
         fixedFlow(flowRate);
     }
 
-    public void put(Long id) {
+    public void put(int id) {
         try {
             bucketLock.acquire();
-            if (waitings.size(BUCKET_KEY) >= capacity) {
+            var size = waitings.size(BUCKET_KEY);
+            if (size >= capacity) {
                 throw new BucketFullException("bucket full");
             }
             waitings.rightPush(BUCKET_KEY, id);
-            LOGGER.info("distributed, waitings : " + waitings.size(BUCKET_KEY));
+            LOGGER.info("put, waitings : " + (size + 1));
+            bucketLock.release();
         } catch (TimeoutException e) {
             throw new BucketFullException("bucket full");
-        } finally {
-            bucketLock.release();
         }
     }
 
-    public void putAndWait(Long id) throws TimeoutException {
+    public void putAndWait(int id) throws TimeoutException {
         put(id);
         var startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < (long) flowRate * capacity) {
@@ -62,8 +62,8 @@ public class LeakyBucket<T> {
     private void fixedFlow(int flowRate) {
         var scheduleService = Executors.newScheduledThreadPool(1);
         scheduleService.scheduleAtFixedRate(() -> {
-            if (waitings.size(BUCKET_KEY) > 0) {
-                waitings.leftPop(BUCKET_KEY);
+            var l = waitings.leftPop(BUCKET_KEY);
+            if (l != null) {
                 LOGGER.info("release, waitings : " + waitings.size(BUCKET_KEY));
             }
         }, 0, flowRate, TimeUnit.MILLISECONDS);
