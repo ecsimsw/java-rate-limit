@@ -11,12 +11,12 @@ public class RateLimitCounter {
 
     private final AtomicInteger requestIds = new AtomicInteger(Integer.MAX_VALUE);
 
-    private final LeakyBucket<Integer> bucket;
+    private final LeakyBucket bucket;
     private final boolean noDelay;
 
     public RateLimitCounter(int burst, int rate, boolean noDelay, RedisTemplate redisTemplate) {
         this.noDelay = noDelay;
-        this.bucket = new LeakyBucket<>(rate, burst, redisTemplate);
+        this.bucket = new LeakyBucket(rate, burst, redisTemplate);
     }
 
     public void count() {

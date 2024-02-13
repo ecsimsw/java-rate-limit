@@ -10,9 +10,9 @@ public class BucketLock {
     private static final String LOCK_KEY = "BUCKET_LOCK";
     private static final int LOCK_TTL = 100;
 
-    private final ValueOperations locks;
+    private final ValueOperations<String, Object> locks;
 
-    public BucketLock(RedisTemplate redisTemplate) {
+    public BucketLock(RedisTemplate<String, Object> redisTemplate) {
         this.locks = redisTemplate.opsForValue();
     }
 
