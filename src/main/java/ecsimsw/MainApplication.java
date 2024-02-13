@@ -8,6 +8,7 @@ public class MainApplication {
 
     public static void main(String[] args) {
         var app = new SpringApplication(MainApplication.class);
+        app.setAdditionalProfiles("standalone");
         app.run();
     }
 }

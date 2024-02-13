@@ -10,10 +10,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.support.atomic.RedisAtomicInteger;
+import org.springframework.test.context.ActiveProfiles;
 
+@ActiveProfiles("distributed")
 @DisplayName("Redis 의 원자성을 확인한다.")
 @SpringBootTest
 public class RedisConcurrentTest {
@@ -64,7 +67,7 @@ public class RedisConcurrentTest {
     public void testRedisAtomicInteger() {
         redisAtomicInteger.set(0);
         ConcurrentTestUtils.concurrentRequestScenario(NUMBER_OF_THREADS, () -> {
-            for (int j = 0; j < 200; j++) {
+            for (int j = 0; j < 2000; j++) {
                 int now = redisAtomicInteger.get();
                 if (now < countLimit) {
                     redisAtomicInteger.compareAndSet(now, now + 1);

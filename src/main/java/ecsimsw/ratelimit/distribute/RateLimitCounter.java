@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RateLimitCounter {
 
-    private final AtomicInteger requestIds = new AtomicInteger(Integer.MAX_VALUE);
+    private final AtomicInteger requestIds = new AtomicInteger(0);
 
     private final LeakyBucket bucket;
     private final boolean noDelay;
