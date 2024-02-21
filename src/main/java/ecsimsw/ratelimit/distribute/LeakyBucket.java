@@ -7,9 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 public class LeakyBucket {
 
@@ -20,12 +18,14 @@ public class LeakyBucket {
     private final int capacity;
     private final ListOperations<String, Integer> waitings;
     private final BucketLock bucketLock;
+    private final SchedulerLock schedulerLock;
 
-    public LeakyBucket(int flowRate, int capacity, RedisTemplate redisTemplate, RedissonClient redisClient) {
+    public LeakyBucket(int flowRate, int capacity, RedisTemplate redisTemplate, RedissonClient redissonClient) {
         this.flowRate = flowRate;
         this.capacity = capacity;
         this.waitings = redisTemplate.opsForList();
-        this.bucketLock = new BucketLock(redisClient);
+        this.bucketLock = new BucketLock(redissonClient);
+        this.schedulerLock = new SchedulerLock(redissonClient);
         fixedFlow(flowRate);
     }
 
@@ -61,12 +61,27 @@ public class LeakyBucket {
     }
 
     private void fixedFlow(int flowRate) {
-        var scheduleService = Executors.newScheduledThreadPool(1);
-        scheduleService.scheduleAtFixedRate(() -> {
-            var l = waitings.leftPop(BUCKET_KEY);
-            if (l != null) {
-                LOGGER.info("release, waitings : " + waitings.size(BUCKET_KEY));
+        while (true) {
+            if(schedulerLock.getLock()) {
+                var scheduleService = Executors.newScheduledThreadPool(1);
+                var scheduledFuture = scheduleService.scheduleAtFixedRate(() -> {
+                    var l = waitings.leftPop(BUCKET_KEY);
+                    if (l != null) {
+                        LOGGER.info("release, waitings : " + waitings.size(BUCKET_KEY));
+                    }
+                }, 0, flowRate, TimeUnit.MILLISECONDS);
+
+                var startTime = System.currentTimeMillis();
+                while (System.currentTimeMillis() - startTime < schedulerLock.getTTLAsMillis()) {
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                scheduledFuture.cancel(true);
+                schedulerLock.release();
             }
-        }, 0, flowRate, TimeUnit.MILLISECONDS);
+        }
     }
 }
