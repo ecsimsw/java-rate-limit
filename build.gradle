@@ -20,6 +20,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+    implementation 'org.redisson:redisson-spring-boot-starter:3.18.0'
+
     // Google Guava
     implementation 'com.google.guava:guava:33.0.0-jre'
 

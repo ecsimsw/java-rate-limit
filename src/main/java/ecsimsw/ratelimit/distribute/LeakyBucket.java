@@ -1,6 +1,7 @@
 package ecsimsw.ratelimit.distribute;
 
 import ecsimsw.ratelimit.BucketFullException;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ListOperations;
@@ -20,11 +21,11 @@ public class LeakyBucket {
     private final ListOperations<String, Integer> waitings;
     private final BucketLock bucketLock;
 
-    public LeakyBucket(int flowRate, int capacity, RedisTemplate redisTemplate) {
+    public LeakyBucket(int flowRate, int capacity, RedisTemplate redisTemplate, RedissonClient redisClient) {
         this.flowRate = flowRate;
         this.capacity = capacity;
         this.waitings = redisTemplate.opsForList();
-        this.bucketLock = new BucketLock(redisTemplate);
+        this.bucketLock = new BucketLock(redisClient);
         fixedFlow(flowRate);
     }
 

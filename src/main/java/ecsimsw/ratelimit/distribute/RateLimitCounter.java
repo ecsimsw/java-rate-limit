@@ -2,6 +2,7 @@ package ecsimsw.ratelimit.distribute;
 
 import ecsimsw.ratelimit.BucketFullException;
 import ecsimsw.ratelimit.TooManyRequestException;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.concurrent.TimeoutException;
@@ -14,9 +15,13 @@ public class RateLimitCounter {
     private final LeakyBucket bucket;
     private final boolean noDelay;
 
-    public RateLimitCounter(int burst, int rate, boolean noDelay, RedisTemplate redisTemplate) {
+    public RateLimitCounter(
+        int burst, int rate, boolean noDelay,
+        RedisTemplate redisTemplate,
+        RedissonClient redissonClient
+    ) {
         this.noDelay = noDelay;
-        this.bucket = new LeakyBucket(rate, burst, redisTemplate);
+        this.bucket = new LeakyBucket(rate, burst, redisTemplate, redissonClient);
     }
 
     public void count() {

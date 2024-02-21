@@ -1,37 +1,35 @@
 package ecsimsw.ratelimit.distribute;
 
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 
 public class BucketLock {
 
     private static final String LOCK_KEY = "BUCKET_LOCK";
+    private static final int LOCK_WAIT_TIME = 300;
     private static final int LOCK_TTL = 100;
 
-    private final ValueOperations<String, Object> locks;
+    private final RLock locks;
 
-    public BucketLock(RedisTemplate<String, Object> redisTemplate) {
-        this.locks = redisTemplate.opsForValue();
+    public BucketLock(RedissonClient redissonClient) {
+        this.locks = redissonClient.getLock(LOCK_KEY);
     }
 
     public void acquire() throws TimeoutException {
-        var startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < LOCK_TTL + 1) {
-            if (locks.setIfAbsent(LOCK_KEY, 0, LOCK_TTL, TimeUnit.MILLISECONDS)) {
-                return;
+        try {
+            boolean b = locks.tryLock(LOCK_WAIT_TIME, LOCK_TTL, TimeUnit.MILLISECONDS);
+            if(!b) {
+                throw new TimeoutException();
             }
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+        } catch (InterruptedException e) {
+            throw new IllegalArgumentException("Thread interrupted");
         }
-        throw new TimeoutException("time out");
     }
 
     public void release() {
-        locks.getAndDelete(LOCK_KEY);
+        locks.unlock();
     }
 }

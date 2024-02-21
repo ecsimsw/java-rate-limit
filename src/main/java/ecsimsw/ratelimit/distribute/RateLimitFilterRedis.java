@@ -6,6 +6,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,8 +17,12 @@ public class RateLimitFilterRedis extends OncePerRequestFilter {
 
     private final RateLimitCounter rateLimitCounter;
 
-    public RateLimitFilterRedis(int rate, int burst, boolean noDelay, RedisTemplate redisTemplate) {
-        this.rateLimitCounter = new RateLimitCounter(burst, rate, noDelay, redisTemplate);
+    public RateLimitFilterRedis(
+        int rate, int burst, boolean noDelay,
+        RedisTemplate redisTemplate,
+        RedissonClient redissonClient
+    ) {
+        this.rateLimitCounter = new RateLimitCounter(burst, rate, noDelay, redisTemplate, redissonClient);
     }
 
     @Override

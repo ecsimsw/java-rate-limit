@@ -2,8 +2,8 @@ package ecsimsw.usage;
 
 import ecsimsw.ratelimit.distribute.RateLimitFilterRedis;
 import ecsimsw.ratelimit.standalone.RateLimitFilter;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +20,10 @@ public class RateLimitConfig {
 
     @ConditionalOnProperty(value = "spring.data.redis.host")
     @Bean
-    public RateLimitFilterRedis rateLimitFilterDistributed(@Autowired RedisTemplate redisTemplate) {
-        return new RateLimitFilterRedis(1000, 10, false, redisTemplate);
+    public RateLimitFilterRedis rateLimitFilterDistributed(
+        @Autowired RedisTemplate redisTemplate,
+        @Autowired RedissonClient redissonClient
+    ) {
+        return new RateLimitFilterRedis(1000, 10, false, redisTemplate, redissonClient);
     }
 }
