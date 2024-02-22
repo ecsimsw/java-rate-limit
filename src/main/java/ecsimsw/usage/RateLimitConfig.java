@@ -1,5 +1,6 @@
 package ecsimsw.usage;
 
+import ecsimsw.ratelimit.LeakyBucket;
 import ecsimsw.ratelimit.RateLimitCounter;
 import ecsimsw.ratelimit.RateLimitFilter;
 import ecsimsw.ratelimit.distribute.LeakyBucketD;
@@ -20,25 +21,24 @@ public class RateLimitConfig {
 
     @ConditionalOnProperty(value = "spring.data.redis.host", havingValue = " ", matchIfMissing = true)
     @Bean
-    public RateLimitCounter rateLimitCounterStandAlone() {
-        var bucket = new LeakyBucketS(rate, burst);
-        bucket.fixedFlow(rate);
-        return new RateLimitCounter(bucket, noDelay);
+    public LeakyBucket leakyBucketStandAlone() {
+        return new LeakyBucketS(rate, burst);
     }
 
     @ConditionalOnProperty(value = "spring.data.redis.host")
     @Bean
-    public RateLimitCounter rateLimitCounterDistributed(
+    public LeakyBucket leakyBucketDistributed(
         @Autowired RedisTemplate redisTemplate,
         @Autowired RedissonClient redissonClient
     ) {
-        var bucket = new LeakyBucketD(rate, burst, redisTemplate, redissonClient);
-        bucket.fixedFlow(rate);
-        return new RateLimitCounter(bucket, noDelay);
+        return new LeakyBucketD(rate, burst, redisTemplate, redissonClient);
     }
 
     @Bean
-    public RateLimitFilter rateLimitFilter(RateLimitCounter counter) {
-        return new RateLimitFilter(counter);
+    public RateLimitFilter rateLimitFilter(LeakyBucket leakyBucket) {
+        leakyBucket.fixedFlow(rate);
+        return new RateLimitFilter(
+            new RateLimitCounter(leakyBucket, noDelay)
+        );
     }
 }
