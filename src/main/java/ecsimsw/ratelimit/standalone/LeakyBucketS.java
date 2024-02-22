@@ -46,7 +46,7 @@ public class LeakyBucketS implements LeakyBucket {
         throw new TimeoutException("time out");
     }
 
-    public void fixedFlow(int flowRate) {
+    public void fixedFlow() {
         var scheduleService = Executors.newScheduledThreadPool(1);
         scheduleService.scheduleAtFixedRate(() -> {
             if (!waitings.isEmpty()) {

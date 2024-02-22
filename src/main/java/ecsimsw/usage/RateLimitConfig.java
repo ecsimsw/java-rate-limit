@@ -5,6 +5,8 @@ import ecsimsw.ratelimit.RateLimitCounter;
 import ecsimsw.ratelimit.RateLimitFilter;
 import ecsimsw.ratelimit.distribute.LeakyBucketD;
 import ecsimsw.ratelimit.standalone.LeakyBucketS;
+import jakarta.annotation.PostConstruct;
+import lombok.NoArgsConstructor;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -12,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 
+@NoArgsConstructor
 @Configuration
 public class RateLimitConfig {
 
@@ -36,7 +39,6 @@ public class RateLimitConfig {
 
     @Bean
     public RateLimitFilter rateLimitFilter(LeakyBucket leakyBucket) {
-        leakyBucket.fixedFlow(rate);
         return new RateLimitFilter(
             new RateLimitCounter(leakyBucket, noDelay)
         );

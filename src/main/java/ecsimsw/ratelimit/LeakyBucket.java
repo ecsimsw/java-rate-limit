@@ -8,5 +8,5 @@ public interface LeakyBucket {
 
     void putAndWait(int id) throws TimeoutException;
 
-    void fixedFlow(int flowRate);
+    void fixedFlow();
 }

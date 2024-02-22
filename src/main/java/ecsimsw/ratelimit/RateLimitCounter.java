@@ -13,6 +13,7 @@ public class RateLimitCounter {
     public RateLimitCounter(LeakyBucket leakyBucket, boolean noDelay) {
         this.noDelay = noDelay;
         this.bucket = leakyBucket;
+        this.bucket.fixedFlow();
     }
 
     public void count() {

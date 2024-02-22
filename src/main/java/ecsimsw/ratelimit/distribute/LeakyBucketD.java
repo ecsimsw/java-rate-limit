@@ -9,7 +9,6 @@ import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 
-import java.time.LocalDateTime;
 import java.util.concurrent.TimeoutException;
 
 public class LeakyBucketD implements LeakyBucket {
@@ -68,13 +67,11 @@ public class LeakyBucketD implements LeakyBucket {
     }
 
     @Async
-    public void fixedFlow(int flowRate) {
-        var lockWaitTime = 1000 * 10;
-        while(true) {
-            schedulerLock.lockAndRun(lockWaitTime, flowRate, () -> {
-//                waitings.leftPop(BUCKET_KEY);
-//                LOGGER.info("release, waitings : " + waitings.size(BUCKET_KEY));
-                LOGGER.info(LocalDateTime.now().toString());
+    public void fixedFlow() {
+        while (true) {
+            schedulerLock.scheduled(flowRate, () -> {
+                waitings.leftPop(BUCKET_KEY);
+                LOGGER.info("release, waitings : " + waitings.size(BUCKET_KEY));
             });
         }
     }
