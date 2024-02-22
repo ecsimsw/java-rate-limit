@@ -1,8 +1,9 @@
 package ecsimsw.usage;
 
-import ecsimsw.ratelimit.distribute.RateLimitCounter;
-import ecsimsw.ratelimit.distribute.RateLimitFilterRedis;
-import ecsimsw.ratelimit.standalone.RateLimitFilter;
+import ecsimsw.ratelimit.RateLimitCounter;
+import ecsimsw.ratelimit.RateLimitFilter;
+import ecsimsw.ratelimit.distribute.LeakyBucketD;
+import ecsimsw.ratelimit.standalone.LeakyBucketS;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,23 +14,31 @@ import org.springframework.data.redis.core.RedisTemplate;
 @Configuration
 public class RateLimitConfig {
 
+    private static final int burst = 10;
+    private static final int rate = 1000;
+    private static final boolean noDelay = false;
+
     @ConditionalOnProperty(value = "spring.data.redis.host", havingValue = " ", matchIfMissing = true)
     @Bean
-    public RateLimitFilter rateLimitFilterStandAlone() {
-        return new RateLimitFilter(1000, 10, false);
+    public RateLimitCounter rateLimitCounterStandAlone() {
+        var bucket = new LeakyBucketS(rate, burst);
+        bucket.fixedFlow(rate);
+        return new RateLimitCounter(bucket, noDelay);
     }
 
     @ConditionalOnProperty(value = "spring.data.redis.host")
     @Bean
-    public RateLimitFilterRedis rateLimitFilterDistributed(
+    public RateLimitCounter rateLimitCounterDistributed(
         @Autowired RedisTemplate redisTemplate,
         @Autowired RedissonClient redissonClient
     ) {
-        var burst = 10;
-        var rate =  1000;
-        var noDelay = false;
-        return new RateLimitFilterRedis(
-            new RateLimitCounter(burst, rate, noDelay, redisTemplate, redissonClient)
-        );
+        var bucket = new LeakyBucketD(rate, burst, redisTemplate, redissonClient);
+        bucket.fixedFlow(rate);
+        return new RateLimitCounter(bucket, noDelay);
+    }
+
+    @Bean
+    public RateLimitFilter rateLimitFilter(RateLimitCounter counter) {
+        return new RateLimitFilter(counter);
     }
 }

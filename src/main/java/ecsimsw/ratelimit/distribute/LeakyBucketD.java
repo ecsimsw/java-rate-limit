@@ -1,6 +1,7 @@
 package ecsimsw.ratelimit.distribute;
 
 import ecsimsw.ratelimit.BucketFullException;
+import ecsimsw.ratelimit.LeakyBucket;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,10 +13,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class LeakyBucket {
+public class LeakyBucketD implements LeakyBucket {
 
     public static final String BUCKET_KEY = "BUCKET_KEY";
-    private static final Logger LOGGER = LoggerFactory.getLogger(LeakyBucket.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LeakyBucketD.class);
 
     private final int flowRate;
     private final int capacity;
@@ -23,7 +24,7 @@ public class LeakyBucket {
     private final BucketLock bucketLock;
     private final SchedulerLock schedulerLock;
 
-    public LeakyBucket(
+    public LeakyBucketD(
         int flowRate,
         int capacity,
         RedisTemplate redisTemplate,

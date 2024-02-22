@@ -1,27 +1,27 @@
 package ecsimsw.ratelimit.standalone;
 
 import ecsimsw.ratelimit.BucketFullException;
+import ecsimsw.ratelimit.LeakyBucket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
 
-public class LeakyBucket<T> {
+public class LeakyBucketS implements LeakyBucket {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LeakyBucket.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LeakyBucketS.class);
 
     private final int flowRate;
     private final int capacity;
-    private final BlockingQueue<T> waitings;
+    private final BlockingQueue<Integer> waitings;
 
-    public LeakyBucket(int flowRate, int capacity) {
+    public LeakyBucketS(int flowRate, int capacity) {
         this.flowRate = flowRate;
         this.capacity = capacity;
         this.waitings = new ArrayBlockingQueue<>(capacity);
-        fixedFlow(flowRate);
     }
 
-    public void put(T id) {
+    public void put(int id) {
         try {
             waitings.add(id);
             LOGGER.info("put, waitings : " + waitings.size());
@@ -30,7 +30,7 @@ public class LeakyBucket<T> {
         }
     }
 
-    public void putAndWait(T id) throws TimeoutException {
+    public void putAndWait(int id) throws TimeoutException {
         put(id);
         var startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < (long) flowRate * capacity) {
@@ -46,7 +46,7 @@ public class LeakyBucket<T> {
         throw new TimeoutException("time out");
     }
 
-    private void fixedFlow(int flowRate) {
+    public void fixedFlow(int flowRate) {
         var scheduleService = Executors.newScheduledThreadPool(1);
         scheduleService.scheduleAtFixedRate(() -> {
             if (!waitings.isEmpty()) {
