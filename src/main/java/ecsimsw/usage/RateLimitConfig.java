@@ -1,5 +1,6 @@
 package ecsimsw.usage;
 
+import ecsimsw.ratelimit.distribute.RateLimitCounter;
 import ecsimsw.ratelimit.distribute.RateLimitFilterRedis;
 import ecsimsw.ratelimit.standalone.RateLimitFilter;
 import org.redisson.api.RedissonClient;
@@ -24,6 +25,11 @@ public class RateLimitConfig {
         @Autowired RedisTemplate redisTemplate,
         @Autowired RedissonClient redissonClient
     ) {
-        return new RateLimitFilterRedis(1000, 10, false, redisTemplate, redissonClient);
+        var burst = 10;
+        var rate =  1000;
+        var noDelay = false;
+        return new RateLimitFilterRedis(
+            new RateLimitCounter(burst, rate, noDelay, redisTemplate, redissonClient)
+        );
     }
 }

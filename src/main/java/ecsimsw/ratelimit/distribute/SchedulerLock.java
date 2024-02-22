@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 public class SchedulerLock {
 
     private static final String LOCK_KEY = "SCHEDULER_LOCK";
-    private static final int LOCK_TTL_MIN = 10;
+    private static final int LOCK_TTL_SEC = 10 * 60;
 
     private final RLock locks;
 
@@ -18,14 +18,10 @@ public class SchedulerLock {
 
     public boolean getLock() {
         try {
-            return locks.tryLock(LOCK_TTL_MIN, LOCK_TTL_MIN, TimeUnit.MINUTES);
+            return locks.tryLock(1, LOCK_TTL_SEC, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             throw new IllegalArgumentException(e);
         }
-    }
-
-    public long getTTLAsMillis() {
-        return LOCK_TTL_MIN * 1000 * 60;
     }
 
     public void release() {

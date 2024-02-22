@@ -6,13 +6,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class LeakyBucket {
 
+    public static final String BUCKET_KEY = "BUCKET_KEY";
     private static final Logger LOGGER = LoggerFactory.getLogger(LeakyBucket.class);
-    private static final String BUCKET_KEY = "BUCKET_KEY";
 
     private final int flowRate;
     private final int capacity;
@@ -20,13 +23,17 @@ public class LeakyBucket {
     private final BucketLock bucketLock;
     private final SchedulerLock schedulerLock;
 
-    public LeakyBucket(int flowRate, int capacity, RedisTemplate redisTemplate, RedissonClient redissonClient) {
+    public LeakyBucket(
+        int flowRate,
+        int capacity,
+        RedisTemplate redisTemplate,
+        RedissonClient redissonClient
+    ) {
         this.flowRate = flowRate;
         this.capacity = capacity;
         this.waitings = redisTemplate.opsForList();
         this.bucketLock = new BucketLock(redissonClient);
         this.schedulerLock = new SchedulerLock(redissonClient);
-        fixedFlow(flowRate);
     }
 
     public void put(int id) {
@@ -60,28 +67,17 @@ public class LeakyBucket {
         throw new TimeoutException("time out");
     }
 
-    private void fixedFlow(int flowRate) {
-        while (true) {
-            if(schedulerLock.getLock()) {
+    @Async
+    public void fixedFlow(int flowRate) {
+//        while (true) {
+            LOGGER.info("Try get lock");
+            if (schedulerLock.getLock()) {
                 var scheduleService = Executors.newScheduledThreadPool(1);
-                var scheduledFuture = scheduleService.scheduleAtFixedRate(() -> {
-                    var l = waitings.leftPop(BUCKET_KEY);
-                    if (l != null) {
-                        LOGGER.info("release, waitings : " + waitings.size(BUCKET_KEY));
-                    }
+                scheduleService.scheduleAtFixedRate(() -> {
+                    waitings.leftPop(BUCKET_KEY);
+                    LOGGER.info("release, waitings : " + waitings.size(BUCKET_KEY));
                 }, 0, flowRate, TimeUnit.MILLISECONDS);
-
-                var startTime = System.currentTimeMillis();
-                while (System.currentTimeMillis() - startTime < schedulerLock.getTTLAsMillis()) {
-                    try {
-                        Thread.sleep(10000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                scheduledFuture.cancel(true);
-                schedulerLock.release();
             }
-        }
+//        }
     }
 }

@@ -22,6 +22,7 @@ public class RateLimitCounter {
     ) {
         this.noDelay = noDelay;
         this.bucket = new LeakyBucket(rate, burst, redisTemplate, redissonClient);
+        this.bucket.fixedFlow(rate);
     }
 
     public void count() {
