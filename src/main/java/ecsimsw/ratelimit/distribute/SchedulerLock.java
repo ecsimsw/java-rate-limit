@@ -32,11 +32,6 @@ public class SchedulerLock {
             if (flowRate - jobDuration > 0) {
                 Thread.sleep(flowRate - jobDuration);
             }
-            if (locks.isHeldByCurrentThread()) {
-                locks.unlock();
-            }
-        } catch (IllegalMonitorStateException monitorStateException) {
-            logger.error(monitorStateException.getMessage());
         } catch (InterruptedException e) {
             throw new IllegalArgumentException(e);
         }

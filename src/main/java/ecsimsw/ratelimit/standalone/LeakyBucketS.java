@@ -38,7 +38,7 @@ public class LeakyBucketS implements LeakyBucket {
                 return;
             }
             try {
-                Thread.sleep(1);
+                Thread.sleep(flowRate);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

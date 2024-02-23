@@ -21,7 +21,7 @@ public class BucketLock {
     public void acquire() throws TimeoutException {
         try {
             boolean b = locks.tryLock(LOCK_WAIT_TIME, LOCK_TTL, TimeUnit.MILLISECONDS);
-            if(!b) {
+            if (!b) {
                 throw new TimeoutException();
             }
         } catch (InterruptedException e) {

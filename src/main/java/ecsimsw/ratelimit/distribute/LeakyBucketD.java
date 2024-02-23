@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeoutException;
 
 public class LeakyBucketD implements LeakyBucket {
@@ -58,7 +59,7 @@ public class LeakyBucketD implements LeakyBucket {
                 return;
             }
             try {
-                Thread.sleep(1);
+                Thread.sleep(flowRate);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
