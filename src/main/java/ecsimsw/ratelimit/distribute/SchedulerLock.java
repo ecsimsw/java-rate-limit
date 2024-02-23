@@ -29,7 +29,7 @@ public class SchedulerLock {
             var startCommandTime = System.currentTimeMillis();
             command.run();
             var jobDuration = System.currentTimeMillis() - startCommandTime;
-            if (flowRate - jobDuration >= 0) {
+            if (flowRate - jobDuration > 0) {
                 Thread.sleep(flowRate - jobDuration);
             }
             if (locks.isHeldByCurrentThread()) {
