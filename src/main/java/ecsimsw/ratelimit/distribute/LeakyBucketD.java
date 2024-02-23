@@ -69,7 +69,7 @@ public class LeakyBucketD implements LeakyBucket {
     @Async
     public void fixedFlow() {
         while (true) {
-            schedulerLock.scheduled(flowRate, () -> {
+            schedulerLock.fixedRate(flowRate, () -> {
                 waitings.leftPop(BUCKET_KEY);
                 LOGGER.info("release, waitings : " + waitings.size(BUCKET_KEY));
             });

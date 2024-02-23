@@ -18,7 +18,7 @@ public class SchedulerLock {
         this.locks = redissonClient.getLock(LOCK_KEY);
     }
 
-    public void scheduled(long flowRate, Runnable command) {
+    public void fixedRate(long flowRate, Runnable command) {
         try {
             while (true) {
                 logger.info("try lock");
