@@ -22,7 +22,7 @@ public class SchedulerLock {
         try {
             while (true) {
                 logger.info("try lock");
-                if (locks.tryLock(flowRate, flowRate + 30, TimeUnit.MILLISECONDS)) {
+                if (locks.tryLock(flowRate, flowRate, TimeUnit.MILLISECONDS)) {
                     break;
                 }
             }
