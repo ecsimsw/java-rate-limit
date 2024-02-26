@@ -29,6 +29,8 @@ public class BucketLock {
     }
 
     public void release() {
-        locks.unlock();
+        if(locks.isHeldByCurrentThread()) {
+            locks.unlock();
+        }
     }
 }
