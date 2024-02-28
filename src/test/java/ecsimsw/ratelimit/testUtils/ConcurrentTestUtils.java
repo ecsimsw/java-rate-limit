@@ -12,8 +12,11 @@ public class ConcurrentTestUtils {
             var latch = new CountDownLatch(numberOfThreads);
             for (var i = 0; i < numberOfThreads; i++) {
                 service.execute(() -> {
-                    concurrentRequestScene.run();
-                    latch.countDown();
+                    try {
+                        concurrentRequestScene.run();
+                    } finally {
+                        latch.countDown();
+                    }
                 });
             }
             latch.await();
